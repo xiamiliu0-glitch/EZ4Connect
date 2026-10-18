@@ -177,6 +177,7 @@ if(BUILD_TESTING)
 
     add_executable(totpinteraction_test
         tests/totpinteraction_test.cpp
+        application/coreprocess.h
         infrastructure/coreprocess/zjuconnectprocess.cpp
         infrastructure/coreprocess/corecommandbuilder.cpp
         infrastructure/coreprocess/consoleoutputdecoder.cpp
@@ -192,6 +193,7 @@ if(BUILD_TESTING)
     add_executable(authdialogcoordinator_test
         tests/authdialogcoordinator_test.cpp
         presentation/coordinators/authdialogcoordinator.cpp
+        presentation/presentationhelpers.cpp
         presentation/dialogs/graphcaptchawindow/graphcaptchawindow.cpp
         presentation/dialogs/graphcaptchawindow/captchacanvas.cpp
         presentation/dialogs/loginwindow/loginwindow.cpp
