@@ -105,6 +105,9 @@ bool runScenario(const QByteArray &mode, int expectedPrompts, bool expectConnect
     if (timedOut || prompts != expectedPrompts || connected != expectConnected
         || rejected != expectRejection)
     {
+        std::fprintf(stderr,
+                     "scenario=%s timeout=%d finished=%d prompts=%d connected=%d rejected=%d\n",
+                     mode.constData(), timedOut, finished, prompts, connected, rejected);
         qCritical() << "scenario failed" << mode << "timeout" << timedOut
                     << "prompts" << prompts << "connected" << connected
                     << "rejected" << rejected;
