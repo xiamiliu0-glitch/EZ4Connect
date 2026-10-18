@@ -110,7 +110,7 @@ jobs:
           ZJU_CONNECT_VERSION: ${{ inputs.zju_connect_version }}
         run: |
           .\scripts\deploy-windows.ps1 -TargetName "${{ env.TARGET_NAME }}" -DisplayName "${{ env.DISPLAY_NAME }}" -BuildDir "build" -Architecture "amd64" -Nightly ${{ github.event_name == 'workflow_dispatch' && inputs.zju_connect_nightly }} -ZjuConnectVersion $env:ZJU_CONNECT_VERSION
-          foreach ($path in @("EZ4Connect.exe", "zju-connect.exe", "wintun.dll", "qt.conf", "Qt6Core.dll", "platforms/qwindows.dll")) {
+          foreach ($path in @("EZ4Connect.exe", "zju-connect.exe", "wintun.dll", "qt.conf", "Qt6Core.dll", "platforms/qwindows.dll", "msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll")) {
             if (-not (Test-Path (Join-Path "EZ4Connect" $path))) { throw "Missing deployment file: $path" }
           }
           Compress-Archive -Path "${{ env.DISPLAY_NAME }}" -DestinationPath ${{ env.ARCHIVE_NAME }}.zip
