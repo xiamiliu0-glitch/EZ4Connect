@@ -287,7 +287,13 @@ void ZjuConnectProcess::stop()
     if (!stopRequested)
     {
         stopRequested = true;
+#if defined(Q_OS_WIN)
+        // terminate() sends WM_CLOSE on Windows, which does not stop a console
+        // process waiting for input on stdin.
+        zjuConnectProcess->kill();
+#else
         zjuConnectProcess->terminate();
+#endif
     }
     else
     {
