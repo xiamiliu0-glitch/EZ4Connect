@@ -175,6 +175,36 @@ if(BUILD_TESTING)
     target_link_libraries(coreoutputbuffer_test Qt::Core)
     add_test(NAME coreoutputbuffer_test COMMAND coreoutputbuffer_test)
 
+    add_executable(totpinteraction_test
+        tests/totpinteraction_test.cpp
+        infrastructure/coreprocess/zjuconnectprocess.cpp
+        infrastructure/coreprocess/corecommandbuilder.cpp
+        infrastructure/coreprocess/consoleoutputdecoder.cpp
+        infrastructure/coreprocess/coreoutputbuffer.cpp
+        infrastructure/coreprocess/coreoutputparser.cpp
+        infrastructure/platform/privileges.cpp
+        infrastructure/storage/applicationpaths.cpp
+    )
+    target_include_directories(totpinteraction_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(totpinteraction_test Qt::Core Qt::Core5Compat ${PLATFORM_LIBS})
+    add_test(NAME totpinteraction_test COMMAND totpinteraction_test)
+
+    add_executable(authdialogcoordinator_test
+        tests/authdialogcoordinator_test.cpp
+        presentation/coordinators/authdialogcoordinator.cpp
+        presentation/dialogs/graphcaptchawindow/graphcaptchawindow.cpp
+        presentation/dialogs/graphcaptchawindow/captchacanvas.cpp
+        presentation/dialogs/loginwindow/loginwindow.cpp
+        presentation/dialogs/ssologinwebview/ssologinwebview.cpp
+        presentation/dialogs/sudowindow/sudowindow.cpp
+    )
+    target_include_directories(authdialogcoordinator_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(authdialogcoordinator_test
+        Qt::Core Qt::Gui Qt::Widgets Qt::WebEngineWidgets)
+    add_test(NAME authdialogcoordinator_test COMMAND authdialogcoordinator_test)
+    set_tests_properties(authdialogcoordinator_test PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
     add_executable(settingsprofileloader_test
         tests/settingsprofileloader_test.cpp
         infrastructure/settings/settingsprofileloader.cpp

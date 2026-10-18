@@ -18,7 +18,8 @@ CoreOutputEvent CoreOutputParser::parse(const QString &output)
     {
         return CoreOutputEvent::SmsCode;
     }
-    if (output.contains("Please enter your TOTP code:"))
+    if (output.contains("Please enter your TOTP code:")
+        || output.contains("Please enter the TOTP token:"))
     {
         return CoreOutputEvent::TotpCode;
     }
@@ -54,6 +55,10 @@ CoreOutputEvent CoreOutputParser::parse(const QString &output)
     if (output.contains("Login failed") || output.contains("too many login failures"))
     {
         return CoreOutputEvent::LoginFailed;
+    }
+    if (output.contains("token authentication failed with code"))
+    {
+        return CoreOutputEvent::TokenAuthenticationFailed;
     }
     if (output.contains("unexpected newline"))
     {
@@ -96,6 +101,7 @@ bool CoreOutputParser::hasInteractivePrompt(const QByteArray &output)
            || output.contains("Please enter the SMS verification code: ")
            || output.contains("Please enter your SMS code:")
            || output.contains("Please enter your TOTP code:")
+           || output.contains("Please enter the TOTP token:")
            || output.contains("Please enter rand code:")
            || output.contains("Please enter the callback url:");
 }

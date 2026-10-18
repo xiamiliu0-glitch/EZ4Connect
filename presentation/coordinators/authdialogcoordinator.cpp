@@ -5,10 +5,12 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
-#include <QInputDialog>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QPushButton>
+#include <QRegularExpression>
+#include <QRegularExpressionValidator>
 #include <QSettings>
 #include <QUrlQuery>
 #include <QVBoxLayout>
@@ -235,25 +237,79 @@ void AuthDialogCoordinator::requestSmsCode(bool showSkipSecondaryAuthOption)
 
 void AuthDialogCoordinator::requestTotpCode()
 {
-    qInfo().noquote() << "需要 TOTP 验证码";
-    bool accepted = false;
-    const QString totp = QInputDialog::getText(
-        parentWidget,
-        "TOTP 验证码",
-        "请输入 TOTP 验证码：",
-        QLineEdit::Normal,
-        "",
-        &accepted
-    );
-    if (!accepted)
+    if (totpDialog != nullptr)
     {
-        qInfo().noquote() << "TOTP 验证码输入已取消";
-        emit interactiveInputCancelled();
+        totpDialog->raise();
+        totpDialog->activateWindow();
         return;
     }
 
-    qInfo().noquote() << "TOTP 验证码已提交";
-    emit interactiveInputSubmitted(totp.toLocal8Bit() + "\n");
+    qInfo().noquote() << "需要 TOTP 验证码";
+    auto *dialog = new QDialog(parentWidget);
+    totpDialog = dialog;
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setWindowModality(Qt::WindowModal);
+    dialog->setWindowTitle("TOTP 验证码");
+
+    auto *layout = new QVBoxLayout(dialog);
+    layout->addWidget(new QLabel("请输入身份验证器当前显示的六位验证码：", dialog));
+    auto *codeEdit = new QLineEdit(dialog);
+    codeEdit->setObjectName("totpCodeLineEdit");
+    codeEdit->setMaxLength(6);
+    codeEdit->setValidator(new QRegularExpressionValidator(
+        QRegularExpression("[0-9]{6}"), codeEdit
+    ));
+    layout->addWidget(codeEdit);
+
+    auto *buttonBox = new QDialogButtonBox(
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel, dialog
+    );
+    auto *okButton = buttonBox->button(QDialogButtonBox::Ok);
+    okButton->setEnabled(false);
+    connect(codeEdit, &QLineEdit::textChanged, dialog,
+            [okButton](const QString &text)
+            {
+                okButton->setEnabled(text.size() == 6);
+            });
+    connect(buttonBox, &QDialogButtonBox::accepted, dialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
+    layout->addWidget(buttonBox);
+
+    connect(dialog, &QDialog::accepted, this, [this, dialog, codeEdit]()
+    {
+        if (totpDialog != dialog)
+        {
+            return;
+        }
+        const QByteArray input = codeEdit->text().toLatin1() + '\n';
+        codeEdit->clear();
+        totpDialog = nullptr;
+        qInfo().noquote() << "TOTP 验证码已提交";
+        emit interactiveInputSubmitted(input);
+    });
+    connect(dialog, &QDialog::rejected, this, [this, dialog]()
+    {
+        if (totpDialog != dialog)
+        {
+            return;
+        }
+        totpDialog = nullptr;
+        qInfo().noquote() << "TOTP 验证码输入已取消";
+        emit interactiveInputCancelled();
+    });
+    dialog->show();
+    codeEdit->setFocus();
+}
+
+void AuthDialogCoordinator::dismissTotpDialog()
+{
+    if (totpDialog == nullptr)
+    {
+        return;
+    }
+    QDialog *dialog = totpDialog;
+    totpDialog = nullptr;
+    dialog->close();
 }
 
 void AuthDialogCoordinator::requestSsoLogin()

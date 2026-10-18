@@ -20,6 +20,7 @@ enum class CoreOutputEvent
     InvalidCredentials,
     BruteForceBlocked,
     LoginFailed,
+    TokenAuthenticationFailed,
     InteractiveError,
     AuthNotAvailable,
     AuthExpired,

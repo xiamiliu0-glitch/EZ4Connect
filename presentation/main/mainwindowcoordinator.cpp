@@ -82,6 +82,16 @@ MainWindowCoordinator::MainWindowCoordinator(
         connectionSession,
         &ConnectionSession::cancelInteractiveInput
     );
+    connect(connectionSession, &ConnectionSession::stateChanged,
+            authenticationCoordinator,
+            [this](ConnectionState state)
+            {
+                if (state != ConnectionState::Starting
+                    && state != ConnectionState::Running)
+                {
+                    authenticationCoordinator->dismissTotpDialog();
+                }
+            });
 
     connect(
         systemProxySession,

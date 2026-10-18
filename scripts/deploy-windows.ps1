@@ -6,7 +6,8 @@ param(
     [string]$DisplayName = "EZ4Connect",
     [string]$BuildDir = "build",
     [string]$Architecture = "amd64",
-    [string]$Nightly = "false"
+    [string]$Nightly = "false",
+    [string]$ZjuConnectVersion = ""
 )
 
 Import-Module -Name Microsoft.PowerShell.Utility
@@ -19,10 +20,22 @@ Push-Location "$DisplayName"
 Copy-Item -Path "../$BuildDir/Release/$TargetName.exe" -Destination .
 
 # Run windeployqt
-& windeployqt.exe "$TargetName.exe"
+& windeployqt.exe --release --compiler-runtime "$TargetName.exe"
+if ($LASTEXITCODE -ne 0) {
+    throw "windeployqt failed with exit code $LASTEXITCODE"
+}
 
 # Download and extract zju-connect
-$ZjuReleasePath = if ($Nightly -eq "true") { "download/nightly" } else { "latest/download" }
+if ($ZjuConnectVersion -ne "" -and $ZjuConnectVersion -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+$') {
+    throw "Invalid zju-connect version: $ZjuConnectVersion"
+}
+$ZjuReleasePath = if ($ZjuConnectVersion -ne "") {
+    "download/$ZjuConnectVersion"
+} elseif ($Nightly -eq "true") {
+    "download/nightly"
+} else {
+    "latest/download"
+}
 $ZjuUrl = "https://github.com/Mythologyli/zju-connect/releases/$ZjuReleasePath/zju-connect-windows-$Architecture.zip"
 $ZjuZipPath = "zju-connect-windows-$Architecture.zip"
 Invoke-WebRequest -Uri $ZjuUrl -OutFile $ZjuZipPath
@@ -32,12 +45,5 @@ Remove-Item -Path $ZjuZipPath
 # Copy additional files
 Copy-Item -Path "../libs/wintun/bin/$Architecture/wintun.dll" -Destination .
 Copy-Item -Path "../resource/qt.conf" -Destination .
-
-# Remove vc_redist executable
-if ($Architecture -eq "amd64") {
-    Remove-Item -Path vc_redist.x64.exe -ErrorAction SilentlyContinue
-} else {
-    Remove-Item -Path vc_redist.arm64.exe -ErrorAction SilentlyContinue
-}
 
 Pop-Location

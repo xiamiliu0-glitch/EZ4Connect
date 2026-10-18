@@ -125,6 +125,9 @@ void ZjuConnectProcess::processOutputLines(const QList<QByteArray> &lines)
         case CoreOutputEvent::LoginFailed:
             emit error(ZJU_ERROR::OTHER_LOGIN_FAILED);
             break;
+        case CoreOutputEvent::TokenAuthenticationFailed:
+            emit error(ZJU_ERROR::SECONDARY_AUTH_FAILED);
+            break;
         case CoreOutputEvent::InteractiveError:
             emit error(ZJU_ERROR::INTERACTIVE_ERROR);
             break;

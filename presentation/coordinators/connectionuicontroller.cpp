@@ -402,6 +402,9 @@ void ConnectionUiController::showConnectionError(ZJU_ERROR error)
     case ZJU_ERROR::AUTH_EXPIRED:
         message = "认证已过期！\n请重新登录。";
         break;
+    case ZJU_ERROR::SECONDARY_AUTH_FAILED:
+        message = "二次验证失败！\n请检查当前验证码后重新连接。";
+        break;
     case ZJU_ERROR::OTHER:
         message = "其它错误！\n未知原因，可将日志反馈给开发者以便调查。";
         break;

@@ -9,6 +9,14 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
+      windows_x64_only:
+        type: boolean
+        default: true
+        description: "Only test and build Windows x64"
+      zju_connect_version:
+        type: string
+        default: 'v1.3.1'
+        description: "Pinned zju-connect release for Windows x64 (e.g. v1.3.1)"
       nightly:
         type: boolean
         default: true
@@ -29,6 +37,7 @@ env:
 
 jobs:
   unit-tests:
+    if: ${{ !inputs.windows_x64_only }}
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -81,20 +90,29 @@ jobs:
         run: |
           mkdir build
           if ( [bool]::Parse("${{ env.NIGHTLY_BUILD }}") ) {
-            cmake -DNIGHTLY_BUILD=ON -DQT_DEBUG_FIND_PACKAGE=ON -DGIT_HASH="$(git rev-parse --short=7 HEAD)" -DCMAKE_BUILD_TYPE=Release -S . -B build
+            cmake -DNIGHTLY_BUILD=ON -DQT_DEBUG_FIND_PACKAGE=ON -DGIT_HASH="$(git rev-parse --short=7 HEAD)" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -S . -B build
           } else {
             $VER = "${{ env.RELEASE_VERSION }}".substring(1)
-            cmake -DNIGHTLY_BUILD=OFF -DREL_VER="$VER" -DCMAKE_BUILD_TYPE=Release -S . -B build
+            cmake -DNIGHTLY_BUILD=OFF -DREL_VER="$VER" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -S . -B build
           }
 
       - name: Build
         run: |
-          cmake --build build --target ${{ env.TARGET_NAME }} --config Release --parallel $(nproc)
+          cmake --build build --config Release --parallel $(nproc)
+
+      - name: Run Windows tests
+        run: |
+          ctest --test-dir build -C Release --output-on-failure
 
       - name: Download and copy files
         shell: pwsh
+        env:
+          ZJU_CONNECT_VERSION: ${{ inputs.zju_connect_version }}
         run: |
-          .\scripts\deploy-windows.ps1 -TargetName "${{ env.TARGET_NAME }}" -DisplayName "${{ env.DISPLAY_NAME }}" -BuildDir "build" -Architecture "amd64" -Nightly ${{ github.event_name == 'workflow_dispatch' && inputs.zju_connect_nightly }}
+          .\scripts\deploy-windows.ps1 -TargetName "${{ env.TARGET_NAME }}" -DisplayName "${{ env.DISPLAY_NAME }}" -BuildDir "build" -Architecture "amd64" -Nightly ${{ github.event_name == 'workflow_dispatch' && inputs.zju_connect_nightly }} -ZjuConnectVersion $env:ZJU_CONNECT_VERSION
+          foreach ($path in @("EZ4Connect.exe", "zju-connect.exe", "wintun.dll", "qt.conf", "Qt6Core.dll", "platforms/qwindows.dll")) {
+            if (-not (Test-Path (Join-Path "EZ4Connect" $path))) { throw "Missing deployment file: $path" }
+          }
           Compress-Archive -Path "${{ env.DISPLAY_NAME }}" -DestinationPath ${{ env.ARCHIVE_NAME }}.zip
 
       - name: Upload artifact
@@ -104,6 +122,7 @@ jobs:
           path: ${{ env.ARCHIVE_NAME }}.zip
 
   build-windows-arm64:
+    if: ${{ !inputs.windows_x64_only }}
     runs-on: windows-11-arm
     env:
       ARCHIVE_NAME: ${{ github.event.repository.name }}-${{ github.event.release.tag_name || 'nightly' }}-windows-arm64
@@ -152,6 +171,7 @@ jobs:
           path: ${{ env.ARCHIVE_NAME }}.zip
 
   build-macos-x64:
+    if: ${{ !inputs.windows_x64_only }}
     runs-on: macos-14
     env:
       ARCHIVE_NAME: ${{ github.event.repository.name }}-${{ github.event.release.tag_name || 'nightly' }}-macos-x64
@@ -257,6 +277,7 @@ jobs:
           path: ${{ env.ARCHIVE_NAME }}.tar
 
   build-macos-arm64:
+    if: ${{ !inputs.windows_x64_only }}
     runs-on: macos-14
     env:
       ARCHIVE_NAME: ${{ github.event.repository.name }}-${{ github.event.release.tag_name || 'nightly' }}-macos-arm64
@@ -362,6 +383,7 @@ jobs:
           path: ${{ env.ARCHIVE_NAME }}.tar
 
   build-linux-x64:
+    if: ${{ !inputs.windows_x64_only }}
     runs-on: ubuntu-22.04
     env:
       ARCHIVE_NAME: ${{ github.event.repository.name }}-${{ github.event.release.tag_name || 'nightly' }}-linux-x64
@@ -408,6 +430,7 @@ jobs:
           path: ${{ env.ARCHIVE_NAME }}.AppImage
 
   build-linux-arm64:
+    if: ${{ !inputs.windows_x64_only }}
     runs-on: ubuntu-24.04-arm
     env:
       ARCHIVE_NAME: ${{ github.event.repository.name }}-${{ github.event.release.tag_name || 'nightly' }}-linux-arm64

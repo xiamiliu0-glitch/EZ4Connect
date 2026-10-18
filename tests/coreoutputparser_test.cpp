@@ -20,6 +20,7 @@ bool recognizesCoreProtocol()
         {"Please enter the SMS verification code: ", CoreOutputEvent::SmsCodeWithSkipOption},
         {"Please enter your SMS code:", CoreOutputEvent::SmsCode},
         {"Please enter your TOTP code:", CoreOutputEvent::TotpCode},
+        {"2026/10/18 Please enter the TOTP token: ", CoreOutputEvent::TotpCode},
         {"Please enter the callback url:", CoreOutputEvent::SsoCallback},
         {"VPN client started", CoreOutputEvent::ClientStarted},
         {"graph check code still required after second login attempt", CoreOutputEvent::CaptchaFailed},
@@ -30,6 +31,7 @@ bool recognizesCoreProtocol()
         {"You are trying brute-force login on this IP address.", CoreOutputEvent::BruteForceBlocked},
         {"Login failed", CoreOutputEvent::LoginFailed},
         {"too many login failures", CoreOutputEvent::LoginFailed},
+        {"token authentication failed with code 123", CoreOutputEvent::TokenAuthenticationFailed},
         {"unexpected newline", CoreOutputEvent::InteractiveError},
         {"auth type/login domain combination not found", CoreOutputEvent::AuthNotAvailable},
         {"invalid SID", CoreOutputEvent::AuthExpired},
@@ -72,6 +74,7 @@ bool recognizesInteractivePromptsBeforeNewline()
         "Please enter the SMS verification code: ",
         "Please enter your SMS code:",
         "Please enter your TOTP code:",
+        "Please enter the TOTP token: ",
         "Please enter rand code:",
         "Please enter the callback url:",
     };
